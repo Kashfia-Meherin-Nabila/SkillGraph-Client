@@ -1,26 +1,72 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "@heroui/styles";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: #f5f7fb;
+  --color-surface: #ffffff;
+  --color-ink: #14213d;
+  --color-muted: #55607a;
+  --color-line: #dde3ee;
+  --color-cobalt: #2f5bff;
+  --color-cobalt-dark: #2346d1;
+  --color-proficient: #0e9f8a;
+  --color-gap: #f2a516;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cobalt);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Hero backdrop: graph paper. The lit layer is masked by Motion values in Hero.jsx */
+.graph-paper {
+  background-image:
+    linear-gradient(to right, var(--color-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 80% 70% at 70% 40%, #000 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 70% 40%, #000 30%, transparent 75%);
+}
+
+.graph-lit {
+  background-image:
+    linear-gradient(to right, rgba(47, 91, 255, 0.45) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(47, 91, 255, 0.45) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Skill graph nodes are keyboard-focusable SVG groups */
+.node-btn {
+  cursor: pointer;
+  outline: none;
+}
+
+.node-btn:focus-visible .node-rect {
+  stroke: #2f5bff !important;
+  stroke-width: 3.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }
