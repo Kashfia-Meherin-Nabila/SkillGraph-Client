@@ -1,5 +1,4 @@
 import { Bricolage_Grotesque, IBM_Plex_Sans } from "next/font/google";
-import MotionProvider from "@/components/landing/MotionProvider";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({
@@ -24,7 +23,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
       <body>
-        <MotionProvider>{children}</MotionProvider>
+        <main>{children}</main>
       </body>
     </html>
   );
