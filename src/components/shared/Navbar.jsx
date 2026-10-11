@@ -9,7 +9,7 @@ import {
   useMotionValueEvent,
   useScroll,
 } from "motion/react";
-import { FiMenu, FiX, FiLogOut } from "react-icons/fi";
+import { FiMenu, FiX, FiLogOut, FiLayout } from "react-icons/fi";
 import {
   Avatar,
   AvatarFallback,
@@ -19,7 +19,7 @@ import {
 import { authClient, useSession } from "@/lib/auth-client";
 import Logo from "./Logo";
 
-const links = [
+const defaultLinks = [
   { href: "#how-it-works", label: "How it works" },
   { href: "#gap-analysis", label: "Gap analysis" },
   { href: "#roles", label: "Who it's for" },
@@ -52,12 +52,15 @@ function AuthActions({
   mobile = false,
   isPending,
   isLoggedIn,
+  userRole = "developer",
   userName,
   userEmail,
   userImage,
   onLogout,
   onClose,
 }) {
+  const dashboardHref = `/dashboard/${userRole}`;
+
   if (isPending) {
     return (
       <div
@@ -68,6 +71,7 @@ function AuthActions({
     );
   }
 
+  // Logged-out state
   if (!isLoggedIn) {
     if (mobile) {
       return (
@@ -112,6 +116,7 @@ function AuthActions({
     );
   }
 
+  // Logged-in state: Mobile
   if (mobile) {
     return (
       <div className="mt-4 space-y-3 border-t border-line pt-4">
@@ -123,9 +128,23 @@ function AuthActions({
             {userEmail && (
               <p className="truncate text-xs text-muted">{userEmail}</p>
             )}
+            <span className="mt-1 inline-block rounded-full bg-cobalt/10 px-2 py-0.5 text-[10px] font-semibold capitalize text-cobalt">
+              {userRole}
+            </span>
           </div>
         </div>
 
+        {/* Mobile Dashboard Button */}
+        <Link
+          href={dashboardHref}
+          onClick={onClose}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-cobalt px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cobalt-dark"
+        >
+          <FiLayout size={16} />
+          Go to Dashboard
+        </Link>
+
+        {/* Mobile Logout Button */}
         <button
           type="button"
           onClick={onLogout}
@@ -138,28 +157,40 @@ function AuthActions({
     );
   }
 
+  // Logged-in state: Desktop
   return (
     <div className="hidden items-center gap-3 md:flex">
-      <div className="flex max-w-48 items-center gap-2">
+      {/* User profile snippet */}
+      <div className="flex max-w-44 items-center gap-2">
         <UserAvatar userImage={userImage} userName={userName} />
 
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-ink">{userName}</p>
-          {userEmail && (
-            <p className="truncate text-xs text-muted">{userEmail}</p>
-          )}
+          <p className="truncate text-[11px] capitalize text-muted">{userRole}</p>
         </div>
       </div>
 
+      {/* Desktop Dashboard Link Button */}
+      <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}>
+        <Link
+          href={dashboardHref}
+          className="flex items-center gap-1.5 rounded-lg bg-cobalt px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-cobalt-dark shadow-sm"
+        >
+          <FiLayout size={15} />
+          Dashboard
+        </Link>
+      </motion.div>
+
+      {/* Desktop Logout Button */}
       <motion.button
         type="button"
         whileHover={{ y: -2 }}
         whileTap={{ scale: 0.96 }}
         onClick={onLogout}
-        className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+        title="Log Out"
+        className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
       >
         <FiLogOut size={16} />
-        Logout
       </motion.button>
     </div>
   );
@@ -176,14 +207,23 @@ export default function Navbar() {
   const router = useRouter();
   const { scrollY } = useScroll();
 
-  // Extract `refetch` to invalidate client-side session cache
   const { data: session, isPending, refetch } = useSession();
 
   const user = session?.user;
   const isLoggedIn = Boolean(user);
+  const userRole = user?.role || "developer";
+  const dashboardHref = `/dashboard/${userRole}`;
 
   const userName = user?.name || user?.email || "User";
   const userImage = user?.image || undefined;
+
+  // Add Dashboard link into the menu list only when user is logged in
+  const navLinks = [
+    ...defaultLinks,
+    ...(isLoggedIn
+      ? [{ href: dashboardHref, label: "Dashboard", isRoute: true }]
+      : []),
+  ];
 
   useMotionValueEvent(scrollY, "change", (value) => {
     setScrolled(value > 8);
@@ -209,10 +249,9 @@ export default function Navbar() {
 
       setOpen(false);
 
-      // Invalidate Better Auth client cache
+      // Invalidate client session cache
       await refetch();
 
-      // Client-side Next.js navigation
       router.push("/");
       router.refresh();
     } catch (error) {
@@ -225,6 +264,7 @@ export default function Navbar() {
   const authProps = {
     isPending,
     isLoggedIn,
+    userRole,
     userName,
     userEmail: user?.email,
     userImage,
@@ -252,40 +292,62 @@ export default function Navbar() {
       >
         <Logo />
 
+        {/* Desktop Navigation */}
         <ul className="hidden items-center gap-8 text-sm font-medium text-muted md:flex">
-          {links.map((link) => (
-            <motion.li
-              key={link.href}
-              initial="rest"
-              whileHover="hover"
-              animate="rest"
-            >
-              <a
-                href={link.href}
-                className="relative block pb-1 transition-colors hover:text-ink"
-              >
-                {link.label}
+          {navLinks.map((link) => {
+            const isDashboard = link.isRoute;
 
-                <motion.span
-                  aria-hidden="true"
-                  variants={{
-                    rest: { scaleX: 0 },
-                    hover: { scaleX: 1 },
-                  }}
-                  transition={{
-                    duration: 0.25,
-                    ease: "easeOut",
-                  }}
-                  style={{ originX: 0 }}
-                  className="absolute bottom-0 left-0 h-0.5 w-full bg-cobalt"
-                />
-              </a>
-            </motion.li>
-          ))}
+            return (
+              <motion.li
+                key={link.href}
+                initial="rest"
+                whileHover="hover"
+                animate="rest"
+              >
+                {isDashboard ? (
+                  <Link
+                    href={link.href}
+                    className="relative block pb-1 font-semibold text-cobalt transition-colors hover:text-cobalt-dark"
+                  >
+                    {link.label}
+                    <motion.span
+                      aria-hidden="true"
+                      variants={{
+                        rest: { scaleX: 0 },
+                        hover: { scaleX: 1 },
+                      }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      style={{ originX: 0 }}
+                      className="absolute bottom-0 left-0 h-0.5 w-full bg-cobalt"
+                    />
+                  </Link>
+                ) : (
+                  <a
+                    href={link.href}
+                    className="relative block pb-1 transition-colors hover:text-ink"
+                  >
+                    {link.label}
+                    <motion.span
+                      aria-hidden="true"
+                      variants={{
+                        rest: { scaleX: 0 },
+                        hover: { scaleX: 1 },
+                      }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      style={{ originX: 0 }}
+                      className="absolute bottom-0 left-0 h-0.5 w-full bg-cobalt"
+                    />
+                  </a>
+                )}
+              </motion.li>
+            );
+          })}
         </ul>
 
+        {/* Desktop Authentication Actions */}
         <AuthActions {...authProps} />
 
+        {/* Mobile Menu Button */}
         <button
           type="button"
           className="rounded-lg p-2 transition-colors hover:bg-white md:hidden"
@@ -298,6 +360,7 @@ export default function Navbar() {
         </button>
       </nav>
 
+      {/* Animated Mobile Menu */}
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
@@ -313,19 +376,30 @@ export default function Navbar() {
           >
             <div className="px-4 pb-5 pt-3">
               <ul className="flex flex-col gap-1 text-base font-medium">
-                {links.map((link) => (
+                {navLinks.map((link) => (
                   <li key={link.href}>
-                    <a
-                      href={link.href}
-                      className="block rounded-lg px-2 py-2.5 transition-colors hover:bg-white"
-                      onClick={closeMenu}
-                    >
-                      {link.label}
-                    </a>
+                    {link.isRoute ? (
+                      <Link
+                        href={link.href}
+                        className="block rounded-lg px-2 py-2.5 font-semibold text-cobalt transition-colors hover:bg-white"
+                        onClick={closeMenu}
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="block rounded-lg px-2 py-2.5 transition-colors hover:bg-white"
+                        onClick={closeMenu}
+                      >
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
 
+              {/* Mobile Authentication Actions */}
               <AuthActions {...authProps} mobile />
             </div>
           </motion.div>

@@ -10,9 +10,11 @@ import { AuthShell, Field, inputClass } from "./AuthShell";
 import { readinessRingAnimation } from "@/lib/lottie/animations";
 import { authClient } from "@/lib/auth-client";
 
+// Correct role-based dashboard paths
 const ROLE_HOME = {
-  developer: "/dashboard",
-  mentor: "/mentor",
+  developer: "/dashboard/developer",
+  mentor: "/dashboard/mentor",
+  admin: "/dashboard/admin",
 };
 
 const PERKS = [
@@ -43,12 +45,11 @@ export default function SignInForm() {
   async function onSubmit(values) {
     clearErrors("root");
     try {
-      // Better Auth: creates session and sets auth cookie
+      // Authenticate with Better Auth (omit callbackURL so React router controls navigation)
       const { data, error } = await authClient.signIn.email({
         email: values.email.trim().toLowerCase(),
         password: values.password,
         rememberMe: values.remember,
-        callbackURL: "/dashboard",
       });
 
       if (error) {
@@ -63,8 +64,9 @@ export default function SignInForm() {
 
       setRedirecting(true);
 
-      const role = data?.user?.role;
-      const destination = role && ROLE_HOME[role] ? ROLE_HOME[role] : "/dashboard";
+      // Route dynamically to the user's role dashboard
+      const role = data?.user?.role || "developer";
+      const destination = ROLE_HOME[role] || `/dashboard/${role}`;
 
       router.push(destination);
       router.refresh();

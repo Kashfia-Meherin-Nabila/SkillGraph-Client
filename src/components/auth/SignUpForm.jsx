@@ -9,7 +9,7 @@ import { FiAlertCircle, FiChevronDown, FiEye, FiEyeOff } from "react-icons/fi";
 import LottieAnimation from "./LottieAnimation";
 import { AuthShell, Field, inputClass } from "./AuthShell";
 import { graphBuildAnimation, successCheckAnimation } from "@/lib/lottie/animations";
-import { authClient } from "@/lib/auth-client"; // Better Auth client
+import { authClient } from "@/lib/auth-client";
 
 const ROLES = [
   { value: "developer", label: "Developer", text: "Track skills and follow a roadmap" },
@@ -106,11 +106,11 @@ export default function SignUpForm() {
   const role = useWatch({ control, name: "role" });
   const password = useWatch({ control, name: "password" });
 
-  // Auto-redirect to dashboard after animation completes
+  // Auto-redirect to /dashboard/${role} after animation
   useEffect(() => {
     if (done) {
       const timer = setTimeout(() => {
-        router.push("/dashboard");
+        router.push(`/dashboard/${done.role}`);
       }, 1800);
       return () => clearTimeout(timer);
     }
@@ -119,15 +119,21 @@ export default function SignUpForm() {
   async function onSubmit(values) {
     clearErrors("root");
     try {
-      // Better Auth: creates user and establishes active session cookie
-      const { data, error } = await authClient.signUp.email({
+      const selectedRole = values.role || "developer";
+
+      const payload = {
         name: values.name.trim(),
         email: values.email.trim().toLowerCase(),
         password: values.password,
-        role: values.role,
-        targetCareer: values.role === "developer" ? values.targetCareer : undefined,
-        callbackURL: "/dashboard",
-      });
+        role: selectedRole,
+        callbackURL: `/dashboard/${selectedRole}`,
+      };
+
+      if (selectedRole === "developer" && values.targetCareer) {
+        payload.targetCareer = values.targetCareer;
+      }
+
+      const { data, error } = await authClient.signUp.email(payload);
 
       if (error) {
         if (error.field) {
@@ -141,8 +147,13 @@ export default function SignUpForm() {
         return;
       }
 
-      // Show success screen then auto-navigate to dashboard
-      setDone({ name: values.name.trim(), email: values.email.trim() });
+      // Save name, email, and dynamic role into done state
+      const userRole = data?.user?.role || selectedRole;
+      setDone({
+        name: values.name.trim(),
+        email: values.email.trim(),
+        role: userRole,
+      });
     } catch (err) {
       setError("root.server", {
         type: "server",
@@ -184,8 +195,10 @@ export default function SignUpForm() {
               Your account for <span className="font-semibold text-ink">{done.email}</span> is
               ready. Taking you to your dashboard...
             </p>
+
+            {/* Dynamic Link to /dashboard/developer or /dashboard/mentor */}
             <Link
-              href="/dashboard"
+              href={`/dashboard/${done.role}`}
               className="mt-8 inline-block rounded-xl bg-cobalt px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-cobalt-dark"
             >
               Go to Dashboard
