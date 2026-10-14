@@ -10,19 +10,16 @@ import {
   useScroll,
 } from "motion/react";
 import { FiMenu, FiX, FiLogOut, FiLayout } from "react-icons/fi";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@heroui/react";
+import { Avatar, AvatarFallback, AvatarImage } from "@heroui/react";
 
 import { authClient, useSession } from "@/lib/auth-client";
 import Logo from "./Logo";
 
 const defaultLinks = [
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#gap-analysis", label: "Gap analysis" },
-  { href: "#roles", label: "Who it's for" },
+  { href: "/courses", label: "Courses" },
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/#gap-analysis", label: "Gap analysis" },
+  { href: "/#roles", label: "Who it's for" },
 ];
 
 /* ---------------------------------
@@ -124,7 +121,9 @@ function AuthActions({
           <UserAvatar userImage={userImage} userName={userName} size="lg" />
 
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-ink">{userName}</p>
+            <p className="truncate text-sm font-semibold text-ink">
+              {userName}
+            </p>
             {userEmail && (
               <p className="truncate text-xs text-muted">{userEmail}</p>
             )}
@@ -157,7 +156,7 @@ function AuthActions({
     );
   }
 
-  // Logged-in state: Desktop
+  // Logged-in state: Desktop (Shows user info + single blue Dashboard button)
   return (
     <div className="hidden items-center gap-3 md:flex">
       {/* User profile snippet */}
@@ -166,11 +165,13 @@ function AuthActions({
 
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-ink">{userName}</p>
-          <p className="truncate text-[11px] capitalize text-muted">{userRole}</p>
+          <p className="truncate text-[11px] capitalize text-muted">
+            {userRole}
+          </p>
         </div>
       </div>
 
-      {/* Desktop Dashboard Link Button */}
+      {/* Desktop Dashboard Button */}
       <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}>
         <Link
           href={dashboardHref}
@@ -212,18 +213,12 @@ export default function Navbar() {
   const user = session?.user;
   const isLoggedIn = Boolean(user);
   const userRole = user?.role || "developer";
-  const dashboardHref = `/dashboard/${userRole}`;
 
   const userName = user?.name || user?.email || "User";
   const userImage = user?.image || undefined;
 
-  // Add Dashboard link into the menu list only when user is logged in
-  const navLinks = [
-    ...defaultLinks,
-    ...(isLoggedIn
-      ? [{ href: dashboardHref, label: "Dashboard", isRoute: true }]
-      : []),
-  ];
+  // Only the standard links (no duplicate Dashboard in the menu list)
+  const navLinks = defaultLinks;
 
   useMotionValueEvent(scrollY, "change", (value) => {
     setScrolled(value > 8);
@@ -281,9 +276,7 @@ export default function Navbar() {
         ease: [0.2, 0.8, 0.2, 1],
       }}
       className={`sticky top-0 z-50 border-b border-line bg-paper/90 backdrop-blur transition-shadow duration-300 ${
-        scrolled
-          ? "shadow-[0_10px_30px_-20px_rgba(20,33,61,0.45)]"
-          : ""
+        scrolled ? "shadow-[0_10px_30px_-20px_rgba(20,33,61,0.45)]" : ""
       }`}
     >
       <nav
@@ -293,58 +286,36 @@ export default function Navbar() {
         <Logo />
 
         {/* Desktop Navigation */}
-        <ul className="hidden items-center gap-8 text-sm font-medium text-muted md:flex">
-          {navLinks.map((link) => {
-            const isDashboard = link.isRoute;
 
-            return (
-              <motion.li
-                key={link.href}
-                initial="rest"
-                whileHover="hover"
-                animate="rest"
+        <ul className="hidden items-center gap-8 text-sm font-medium text-muted md:flex">
+          {navLinks.map((link) => (
+            <motion.li
+              key={link.href}
+              initial="rest"
+              whileHover="hover"
+              animate="rest"
+            >
+              <Link
+                href={link.href}
+                className="relative block pb-1 transition-colors hover:text-ink"
               >
-                {isDashboard ? (
-                  <Link
-                    href={link.href}
-                    className="relative block pb-1 font-semibold text-cobalt transition-colors hover:text-cobalt-dark"
-                  >
-                    {link.label}
-                    <motion.span
-                      aria-hidden="true"
-                      variants={{
-                        rest: { scaleX: 0 },
-                        hover: { scaleX: 1 },
-                      }}
-                      transition={{ duration: 0.25, ease: "easeOut" }}
-                      style={{ originX: 0 }}
-                      className="absolute bottom-0 left-0 h-0.5 w-full bg-cobalt"
-                    />
-                  </Link>
-                ) : (
-                  <a
-                    href={link.href}
-                    className="relative block pb-1 transition-colors hover:text-ink"
-                  >
-                    {link.label}
-                    <motion.span
-                      aria-hidden="true"
-                      variants={{
-                        rest: { scaleX: 0 },
-                        hover: { scaleX: 1 },
-                      }}
-                      transition={{ duration: 0.25, ease: "easeOut" }}
-                      style={{ originX: 0 }}
-                      className="absolute bottom-0 left-0 h-0.5 w-full bg-cobalt"
-                    />
-                  </a>
-                )}
-              </motion.li>
-            );
-          })}
+                {link.label}
+                <motion.span
+                  aria-hidden="true"
+                  variants={{
+                    rest: { scaleX: 0 },
+                    hover: { scaleX: 1 },
+                  }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  style={{ originX: 0 }}
+                  className="absolute bottom-0 left-0 h-0.5 w-full bg-cobalt"
+                />
+              </Link>
+            </motion.li>
+          ))}
         </ul>
 
-        {/* Desktop Authentication Actions */}
+        {/* Desktop Authentication Actions (Shows single blue Dashboard button) */}
         <AuthActions {...authProps} />
 
         {/* Mobile Menu Button */}
@@ -378,27 +349,16 @@ export default function Navbar() {
               <ul className="flex flex-col gap-1 text-base font-medium">
                 {navLinks.map((link) => (
                   <li key={link.href}>
-                    {link.isRoute ? (
-                      <Link
-                        href={link.href}
-                        className="block rounded-lg px-2 py-2.5 font-semibold text-cobalt transition-colors hover:bg-white"
-                        onClick={closeMenu}
-                      >
-                        {link.label}
-                      </Link>
-                    ) : (
-                      <a
-                        href={link.href}
-                        className="block rounded-lg px-2 py-2.5 transition-colors hover:bg-white"
-                        onClick={closeMenu}
-                      >
-                        {link.label}
-                      </a>
-                    )}
+                    <Link
+                      href={link.href}
+                      className="block rounded-lg px-2 py-2.5 transition-colors hover:bg-white"
+                      onClick={closeMenu}
+                    >
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
-
               {/* Mobile Authentication Actions */}
               <AuthActions {...authProps} mobile />
             </div>
