@@ -54,7 +54,7 @@ const ROLE_NAV = {
     { label: "Overview", href: "/dashboard/mentor", icon: FiHome },
     { label: "My Mentees", href: "/dashboard/mentor/mentees", icon: FiUsers },
     { label: "Reviews", href: "/dashboard/mentor/reviews", icon: FiFileText },
-    { label: "Sessions", href: "/dashboard/mentor/sessions", icon: FiCalendar },
+    { label: "My-Module", href: "/dashboard/mentor/modules", icon: FiCalendar },
     { label: "Settings", href: "/dashboard/mentor/settings", icon: FiSettings },
   ],
   admin: [
