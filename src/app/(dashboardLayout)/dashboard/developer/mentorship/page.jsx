@@ -58,12 +58,14 @@ export default function DeveloperMentorshipPage() {
 
       try {
         const response = await fetch(
-          `${API_BASE}/mentorship/developer?email=${encodeURIComponent(userEmail)}`,
-          { cache: "no-store" }
+          `${API_BASE}/developer/mentorship?email=${encodeURIComponent(userEmail)}`,
+          { cache: "no-store" },
         );
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch mentorship data (HTTP ${response.status}).`);
+          throw new Error(
+            `Failed to fetch mentorship data (HTTP ${response.status}).`,
+          );
         }
 
         const result = await response.json();
@@ -71,16 +73,26 @@ export default function DeveloperMentorshipPage() {
         if (!isMounted) return;
 
         if (result.success) {
-          setMentor(result.data.mentor || {
-            name: "Alex Rivera",
-            expertise: "Senior Full Stack Architect",
-            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-            rating: 4.9,
-          });
+          setMentor(
+            result.data.mentor || {
+              name: "Alex Rivera",
+              expertise: "Senior Full Stack Architect",
+              avatar:
+                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+              rating: 4.9,
+            },
+          );
           setReviews(result.data.reviews || []);
-          setMessages(result.data.messages || [
-            { id: 1, sender: "mentor", text: "Hey! Let me know if you need any guidance on your latest milestone architecture.", timestamp: "Yesterday at 4:15 PM" }
-          ]);
+          setMessages(
+            result.data.messages || [
+              {
+                id: 1,
+                sender: "mentor",
+                text: "Hey! Let me know if you need any guidance on your latest milestone architecture.",
+                timestamp: "Yesterday at 4:15 PM",
+              },
+            ],
+          );
           setSessions(result.data.sessions || []);
         }
       } catch (err) {
@@ -90,17 +102,38 @@ export default function DeveloperMentorshipPage() {
           setMentor({
             name: "Alex Rivera",
             expertise: "Senior Full Stack Architect @ Vercel ecosystem",
-            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+            avatar:
+              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
             rating: 4.9,
           });
           setReviews([
-            { id: "rev-1", title: "Authentication Flow & JWT Setup", milestone: "Milestone 2: Backend API", status: "Approved", repoUrl: "https://github.com/example/repo", feedback: "Clean implementation! Make sure to sanitize input properties thoroughly before database hashing.", createdAt: "2026-06-10" }
+            {
+              id: "rev-1",
+              title: "Authentication Flow & JWT Setup",
+              milestone: "Milestone 2: Backend API",
+              status: "Approved",
+              repoUrl: "https://github.com/example/repo",
+              feedback:
+                "Clean implementation! Make sure to sanitize input properties thoroughly before database hashing.",
+              createdAt: "2026-06-10",
+            },
           ]);
           setMessages([
-            { id: 1, sender: "mentor", text: "Hi! Feel free to drop your PR or repo links here whenever you are ready for a code review.", timestamp: "10:30 AM" }
+            {
+              id: 1,
+              sender: "mentor",
+              text: "Hi! Feel free to drop your PR or repo links here whenever you are ready for a code review.",
+              timestamp: "10:30 AM",
+            },
           ]);
           setSessions([
-            { id: "ses-1", title: "1-on-1 Architecture Review", date: "June 18, 2026", time: "3:00 PM EST", meetingUrl: "https://meet.google.com/abc-defg-hij" }
+            {
+              id: "ses-1",
+              title: "1-on-1 Architecture Review",
+              date: "June 18, 2026",
+              time: "3:00 PM EST",
+              meetingUrl: "https://meet.google.com/abc-defg-hij",
+            },
           ]);
         }
       } finally {
@@ -194,7 +227,8 @@ export default function DeveloperMentorshipPage() {
             Mentorship & Code Reviews
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Collaborate with your assigned mentor, request expert code reviews, and schedule advisory calls.
+            Collaborate with your assigned mentor, request expert code reviews,
+            and schedule advisory calls.
           </p>
         </div>
 
@@ -218,14 +252,17 @@ export default function DeveloperMentorshipPage() {
             </h2>
 
             {mentor ? (
-              <div className="flex items-center gap-4">
+              <div className="relative h-12 w-12 overflow-hidden rounded-full">
                 <Image
-    src={mentor.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"}
-    alt={mentor.name || "Mentor"}
-    fill
-    sizes="64px"
-    className="object-cover"
-  />
+                  src={
+                    mentor.avatar ||
+                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
+                  }
+                  alt={mentor.name || "Mentor"}
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                />
                 <div>
                   <h3 className="font-display text-base font-bold text-ink">
                     {mentor.name}
@@ -255,12 +292,19 @@ export default function DeveloperMentorshipPage() {
             </div>
 
             {sessions.length === 0 ? (
-              <p className="text-xs text-muted">No upcoming advisory sessions booked.</p>
+              <p className="text-xs text-muted">
+                No upcoming advisory sessions booked.
+              </p>
             ) : (
               <div className="space-y-3">
                 {sessions.map((session) => (
-                  <div key={session.id} className="rounded-xl border border-line bg-paper p-4 space-y-2">
-                    <p className="font-semibold text-xs text-ink">{session.title}</p>
+                  <div
+                    key={session.id}
+                    className="rounded-xl border border-line bg-paper p-4 space-y-2"
+                  >
+                    <p className="font-semibold text-xs text-ink">
+                      {session.title}
+                    </p>
                     <div className="flex items-center gap-3 text-[11px] text-muted">
                       <span className="inline-flex items-center gap-1">
                         <FiCalendar size={13} /> {session.date}
@@ -276,7 +320,8 @@ export default function DeveloperMentorshipPage() {
                         rel="noreferrer"
                         className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-cobalt px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-cobalt/90"
                       >
-                        <FiVideo size={13} /> Join Video Call <FiExternalLink size={12} />
+                        <FiVideo size={13} /> Join Video Call{" "}
+                        <FiExternalLink size={12} />
                       </a>
                     )}
                   </div>
@@ -298,7 +343,8 @@ export default function DeveloperMentorshipPage() {
                   Mentor Direct Workspace
                 </h2>
                 <p className="text-xs text-muted">
-                  Ask questions, share code snippets, and get real-time feedback.
+                  Ask questions, share code snippets, and get real-time
+                  feedback.
                 </p>
               </div>
             </div>
@@ -326,14 +372,19 @@ export default function DeveloperMentorshipPage() {
                   >
                     <p>{msg.text}</p>
                   </div>
-                  <span className="mt-1 text-[10px] text-muted px-1">{msg.timestamp}</span>
+                  <span className="mt-1 text-[10px] text-muted px-1">
+                    {msg.timestamp}
+                  </span>
                 </div>
               );
             })}
           </div>
 
           {/* Message Input Form */}
-          <form onSubmit={handleSendMessage} className="mt-4 flex items-center gap-2 pt-3 border-t border-line">
+          <form
+            onSubmit={handleSendMessage}
+            className="mt-4 flex items-center gap-2 pt-3 border-t border-line"
+          >
             <input
               type="text"
               value={chatInput}
@@ -360,7 +411,7 @@ export default function DeveloperMentorshipPage() {
 
         {reviews.length === 0 ? (
           <p className="text-xs text-muted py-6 text-center">
-            You haven&apous;t submitted any code repositories for review yet.
+            You haven&apos;t submitted any code repositories for review yet.
           </p>
         ) : (
           <div className="divide-y divide-line">
@@ -372,7 +423,9 @@ export default function DeveloperMentorshipPage() {
                       <FiCode size={16} />
                     </span>
                     <div>
-                      <h3 className="font-display text-sm font-bold text-ink">{rev.title}</h3>
+                      <h3 className="font-display text-sm font-bold text-ink">
+                        {rev.title}
+                      </h3>
                       <p className="text-xs text-muted">{rev.milestone}</p>
                     </div>
                   </div>
@@ -384,14 +437,20 @@ export default function DeveloperMentorshipPage() {
                         : "bg-amber-50 text-amber-700"
                     }`}
                   >
-                    {rev.status === "Approved" ? <FiCheckCircle size={12} /> : <FiClock size={12} />}
+                    {rev.status === "Approved" ? (
+                      <FiCheckCircle size={12} />
+                    ) : (
+                      <FiClock size={12} />
+                    )}
                     {rev.status}
                   </span>
                 </div>
 
                 {rev.feedback && (
                   <div className="rounded-xl bg-paper p-3.5 text-xs text-ink border border-line leading-5">
-                    <p className="font-semibold text-muted mb-1">Mentor Feedback:</p>
+                    <p className="font-semibold text-muted mb-1">
+                      Mentor Feedback:
+                    </p>
                     {rev.feedback}
                   </div>
                 )}
@@ -423,51 +482,68 @@ export default function DeveloperMentorshipPage() {
               Request Code Review
             </h2>
             <p className="text-xs text-muted">
-              Submit your repository link and specific milestone details to get professional critique.
+              Submit your repository link and specific milestone details to get
+              professional critique.
             </p>
 
             <form onSubmit={handleCreateReviewRequest} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Review Title</label>
+                <label className="block text-xs font-semibold text-muted mb-1">
+                  Review Title
+                </label>
                 <input
                   type="text"
                   required
                   value={reviewForm.title}
-                  onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
+                  onChange={(e) =>
+                    setReviewForm({ ...reviewForm, title: e.target.value })
+                  }
                   placeholder="e.g., Full Stack E-commerce Cart API & Middleware"
                   className="w-full rounded-xl border border-line bg-paper p-3 text-xs text-ink outline-none focus:border-cobalt"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Milestone / Module</label>
+                <label className="block text-xs font-semibold text-muted mb-1">
+                  Milestone / Module
+                </label>
                 <input
                   type="text"
                   value={reviewForm.milestone}
-                  onChange={(e) => setReviewForm({ ...reviewForm, milestone: e.target.value })}
+                  onChange={(e) =>
+                    setReviewForm({ ...reviewForm, milestone: e.target.value })
+                  }
                   placeholder="e.g., Milestone 3: Database Optimization"
                   className="w-full rounded-xl border border-line bg-paper p-3 text-xs text-ink outline-none focus:border-cobalt"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Repository / PR URL</label>
+                <label className="block text-xs font-semibold text-muted mb-1">
+                  Repository / PR URL
+                </label>
                 <input
                   type="url"
                   required
                   value={reviewForm.repoUrl}
-                  onChange={(e) => setReviewForm({ ...reviewForm, repoUrl: e.target.value })}
+                  onChange={(e) =>
+                    setReviewForm({ ...reviewForm, repoUrl: e.target.value })
+                  }
                   placeholder="https://github.com/username/repository"
                   className="w-full rounded-xl border border-line bg-paper p-3 text-xs text-ink outline-none focus:border-cobalt"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Specific Areas for Feedback (Optional)</label>
+                <label className="block text-xs font-semibold text-muted mb-1">
+                  Specific Areas for Feedback (Optional)
+                </label>
                 <textarea
                   rows={3}
                   value={reviewForm.notes}
-                  onChange={(e) => setReviewForm({ ...reviewForm, notes: e.target.value })}
+                  onChange={(e) =>
+                    setReviewForm({ ...reviewForm, notes: e.target.value })
+                  }
                   placeholder="Let your mentor know if you want focus on performance, security, or clean architecture..."
                   className="w-full rounded-xl border border-line bg-paper p-3 text-xs text-ink outline-none focus:border-cobalt"
                 />
