@@ -15,12 +15,15 @@ import {
   FiAward,
 } from "react-icons/fi";
 import { useSession } from "@/lib/auth-client";
+import MentorRequests from "@/components/mentor/MentorRequests";
 
 const API_ROOT = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 ).replace(/\/+$/, "");
 
 const API_BASE = API_ROOT.endsWith("/api") ? API_ROOT : `${API_ROOT}/api`;
+
+
 
 function formatDate(value) {
   if (!value) return "Not available";
@@ -46,6 +49,7 @@ function getCareerLabel(career) {
 
 export default function MentorMenteesDirectoryPage() {
   const { data: session, isPending } = useSession();
+  const mentorEmail = session?.user?.email;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -138,6 +142,9 @@ export default function MentorMenteesDirectoryPage() {
 
   return (
     <div className="space-y-6">
+      {mentorEmail && (
+  <MentorRequests mentorEmail={mentorEmail} />
+)}
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>

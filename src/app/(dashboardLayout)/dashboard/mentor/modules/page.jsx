@@ -17,10 +17,11 @@ import {
   FiRefreshCw,
   FiExternalLink,
 } from "react-icons/fi";
+import ScheduleSessionForm from "@/components/mentor/ScheduleSessionForm";
 
 const API_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
-).replace(/\/$/, "");
+).replace(/\/+$/, "");
 
 const DAYS = [
   "Sunday",
@@ -114,8 +115,8 @@ export default function MentorSessionsPage() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingAvailability, setSavingAvailability] = useState(false);
-  const [savingSession, setSavingSession] = useState(false);
-  const [sessionForm, setSessionForm] = useState(EMPTY_SESSION_FORM);
+  // const [savingSession, setSavingSession] = useState(false);
+  // const [sessionForm, setSessionForm] = useState(EMPTY_SESSION_FORM);
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [editingSession, setEditingSession] = useState(null);
@@ -330,47 +331,47 @@ useEffect(() => {
     }
   }
 
-  function updateSessionForm(field, value) {
-    setSessionForm((previous) => ({ ...previous, [field]: value }));
-  }
+  // function updateSessionForm(field, value) {
+  //   setSessionForm((previous) => ({ ...previous, [field]: value }));
+  // }
 
-  async function createSession(event) {
-    event.preventDefault();
+  // async function createSession(event) {
+  //   event.preventDefault();
 
-    if (!mentorEmail) return;
+  //   if (!mentorEmail) return;
 
-    if (
-      !sessionForm.startAt ||
-      !sessionForm.endAt ||
-      new Date(sessionForm.endAt) <= new Date(sessionForm.startAt)
-    ) {
-      toast.error("Please choose a valid start and end time.");
-      return;
-    }
+  //   if (
+  //     !sessionForm.startAt ||
+  //     !sessionForm.endAt ||
+  //     new Date(sessionForm.endAt) <= new Date(sessionForm.startAt)
+  //   ) {
+  //     toast.error("Please choose a valid start and end time.");
+  //     return;
+  //   }
 
-    setSavingSession(true);
+  //   setSavingSession(true);
 
-    try {
-      const result = await request("/api/mentor/sessions", {
-        method: "POST",
-        body: JSON.stringify({
-          ...sessionForm,
-          mentorEmail,
-          startAt: new Date(sessionForm.startAt).toISOString(),
-          endAt: new Date(sessionForm.endAt).toISOString(),
-        }),
-      });
+  //   try {
+  //     const result = await request("/api/mentor/sessions", {
+  //       method: "POST",
+  //       body: JSON.stringify({
+  //         ...sessionForm,
+  //         mentorEmail,
+  //         startAt: new Date(sessionForm.startAt).toISOString(),
+  //         endAt: new Date(sessionForm.endAt).toISOString(),
+  //       }),
+  //     });
 
-      setSessions((previous) => [...previous, result.session]);
-      setSessionForm(EMPTY_SESSION_FORM);
-      setShowSessionForm(false);
-      toast.success("Session created.");
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setSavingSession(false);
-    }
-  }
+  //     setSessions((previous) => [...previous, result.session]);
+  //     setSessionForm(EMPTY_SESSION_FORM);
+  //     setShowSessionForm(false);
+  //     toast.success("Session created.");
+  //   } catch (error) {
+  //     toast.error(error.message);
+  //   } finally {
+  //     setSavingSession(false);
+  //   }
+  // }
 
   async function updateSessionStatus(item, status) {
     try {
@@ -519,9 +520,9 @@ useEffect(() => {
               Refresh
             </button>
             <PrimaryButton onClick={() => setShowSessionForm(true)}>
-              <FiPlus />
-              Schedule session
-            </PrimaryButton>
+  <FiPlus />
+  Schedule session
+</PrimaryButton>
           </div>
         </header>
 
@@ -1035,121 +1036,14 @@ useEffect(() => {
       </div>
 
       {showSessionForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/50 p-4">
-          <div className="my-auto w-full max-w-2xl rounded-2xl bg-white p-5 shadow-2xl sm:p-7">
-            <div className="mb-5 flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-bold text-slate-950">
-                  Schedule a session
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Create a mentoring appointment for a developer.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowSessionForm(false)}
-                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
-                aria-label="Close dialog"
-              >
-                <FiX />
-              </button>
-            </div>
-
-            <form onSubmit={createSession} className="space-y-4">
-              <Field label="Mentee email">
-                <input
-                  required
-                  type="email"
-                  className={inputClass}
-                  placeholder="developer@example.com"
-                  value={sessionForm.menteeEmail}
-                  onChange={(event) =>
-                    updateSessionForm("menteeEmail", event.target.value)
-                  }
-                />
-              </Field>
-
-              <Field label="Session topic">
-                <input
-                  required
-                  maxLength={150}
-                  className={inputClass}
-                  placeholder="React hooks and component architecture"
-                  value={sessionForm.title}
-                  onChange={(event) =>
-                    updateSessionForm("title", event.target.value)
-                  }
-                />
-              </Field>
-
-              <Field label="Description">
-                <textarea
-                  rows={3}
-                  className={inputClass}
-                  placeholder="What should you discuss during this session?"
-                  value={sessionForm.description}
-                  onChange={(event) =>
-                    updateSessionForm("description", event.target.value)
-                  }
-                />
-              </Field>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Start date and time">
-                  <input
-                    required
-                    type="datetime-local"
-                    className={inputClass}
-                    value={sessionForm.startAt}
-                    onChange={(event) =>
-                      updateSessionForm("startAt", event.target.value)
-                    }
-                  />
-                </Field>
-
-                <Field label="End date and time">
-                  <input
-                    required
-                    type="datetime-local"
-                    className={inputClass}
-                    value={sessionForm.endAt}
-                    onChange={(event) =>
-                      updateSessionForm("endAt", event.target.value)
-                    }
-                  />
-                </Field>
-              </div>
-
-              <Field label="Meeting link (optional)">
-                <input
-                  type="url"
-                  className={inputClass}
-                  placeholder="https://meet.google.com/..."
-                  value={sessionForm.meetingLink}
-                  onChange={(event) =>
-                    updateSessionForm("meetingLink", event.target.value)
-                  }
-                />
-              </Field>
-
-              <div className="flex flex-wrap justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSessionForm(false)}
-                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <PrimaryButton type="submit" disabled={savingSession}>
-                  <FiCalendar />
-                  {savingSession ? "Creating..." : "Create session"}
-                </PrimaryButton>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+  <ScheduleSessionForm
+    mentorEmail={mentorEmail}
+    onClose={() => setShowSessionForm(false)}
+    onCreated={async () => {
+      await loadPageData();
+    }}
+  />
+)}
     </main>
   );
 }
