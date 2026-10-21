@@ -21,6 +21,7 @@ import {
 import { authClient, useSession } from "@/lib/auth-client";
 import Logo from "../shared/Logo";
 import Image from "next/image";
+import { BiUser } from "react-icons/bi";
 
 /* ---------------------------------------------
    Navigation configuration per role
@@ -45,9 +46,9 @@ const ROLE_NAV = {
       icon: FiUsers,
     },
     {
-      label: "Settings",
-      href: "/dashboard/developer/settings",
-      icon: FiSettings,
+      label: "Profile",
+      href: "/dashboard/profile",
+      icon: BiUser,
     },
   ],
   mentor: [
@@ -55,7 +56,7 @@ const ROLE_NAV = {
     { label: "My Mentees", href: "/dashboard/mentor/mentees", icon: FiUsers },
     { label: "Reviews", href: "/dashboard/mentor/reviews", icon: FiFileText },
     { label: "My-Module", href: "/dashboard/mentor/modules", icon: FiCalendar },
-    { label: "Settings", href: "/dashboard/mentor/settings", icon: FiSettings },
+    { label: "Profile", href: "/dashboard/profile", icon: BiUser },
   ],
   admin: [
     { label: "Overview", href: "/dashboard/admin", icon: FiPieChart },
@@ -66,7 +67,7 @@ const ROLE_NAV = {
       href: "/dashboard/admin/users",
       icon: FiShield,
     },
-    { label: "Settings", href: "/dashboard/admin/settings", icon: FiSettings },
+    { label: "Profile", href: "/dashboard/profile", icon: BiUser },
   ],
 };
 
