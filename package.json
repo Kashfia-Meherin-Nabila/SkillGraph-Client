@@ -14,6 +14,7 @@
     "@heroui/react": "^3.2.6",
     "@lottiefiles/dotlottie-react": "^0.20.0",
     "better-auth": "^1.7.7",
+    "jose-cjs": "^6.2.3",
     "mongodb": "^7.7.0",
     "motion": "^14.1.0",
     "next": "16.3.8",

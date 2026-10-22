@@ -95,7 +95,7 @@ export default function ProfilePage() {
     if (!file) return;
 
     if (
-      !["image/jpeg", "image/png", "image/avif", "image/webp"].includes(
+      !["image/jpeg", "image/png", "image/webp"].includes(
         file.type,
       )
     ) {

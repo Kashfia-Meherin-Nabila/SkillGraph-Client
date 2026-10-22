@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { FiPlus, FiEdit2, FiTrash2, FiClock, FiLayers, FiX } from "react-icons/fi";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function AdminCareersPage() {
   const [courses, setCourses] = useState([]);
@@ -24,7 +25,7 @@ export default function AdminCareersPage() {
 
   const loadCourses = async () => {
   try {
-    const res = await fetch(`${API_BASE}/courses`);
+    const res = await fetch(`${API_BASE}/api/courses`);
 
     if (!res.ok) {
       throw new Error("Failed to fetch courses");
@@ -40,7 +41,7 @@ export default function AdminCareersPage() {
   useEffect(() => {
   async function fetchCourses() {
     try {
-      const res = await fetch(`${API_BASE}/courses`);
+      const res = await fetch(`${API_BASE}/api/courses`);
 
       if (!res.ok) {
         throw new Error("Failed to fetch courses");
@@ -89,7 +90,7 @@ export default function AdminCareersPage() {
     e.preventDefault();
     try {
       const method = editingCourse ? "PUT" : "POST";
-      const url = editingCourse ? `${API_BASE}/courses/${editingCourse._id}` : `${API_BASE}/courses`;
+      const url = editingCourse ? `${API_BASE}/api/courses/${editingCourse._id}` : `${API_BASE}/courses`;
 
       const res = await fetch(url, {
         method,
@@ -109,7 +110,7 @@ export default function AdminCareersPage() {
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this career pathway?")) return;
     try {
-      const res = await fetch(`${API_BASE}/courses/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/api/courses/${id}`, { method: "DELETE" });
       if (res.ok) {
         setCourses((prev) => prev.filter((c) => c._id !== id));
       }

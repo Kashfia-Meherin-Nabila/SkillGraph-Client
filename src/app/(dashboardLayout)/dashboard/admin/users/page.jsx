@@ -1,10 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { FiSearch, FiShield, FiTrash2, FiUserCheck, FiFilter } from "react-icons/fi";
 
-const API_BASE = "http://localhost:5000/api";
+import { FiSearch, FiTrash2 } from "react-icons/fi";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -13,54 +11,64 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [actionLoading, setActionLoading] = useState(false);
 
-const fetchUsers = useCallback(async () => {
-  try {
-    setLoading(true);
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
 
-    const query = new URLSearchParams();
+      const query = new URLSearchParams();
 
-    if (search) query.append("search", search);
-    if (roleFilter !== "all") query.append("role", roleFilter);
+      if (search.trim()) query.set("search", search.trim());
+      if (roleFilter !== "all") query.set("role", roleFilter);
 
-    const res = await fetch(
-      `${API_BASE}/admin/users?${query.toString()}`
-    );
+      const res = await fetch(`/api/admin/users?${query.toString()}`, {
+        method: "GET",
+        cache: "no-store",
+      });
 
-    if (!res.ok) {
-      throw new Error("Failed to load users.");
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.message || "Failed to load users.");
+      }
+
+      setUsers(json.data || []);
+    } catch (err) {
+      console.error("Failed to load users:", err);
+    } finally {
+      setLoading(false);
     }
+  }, [search, roleFilter]);
 
-    const json = await res.json();
-    setUsers(json.data || []);
-  } catch (err) {
-    console.error("Failed to load users:", err);
-  } finally {
-    setLoading(false);
-  }
-}, [search, roleFilter]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, 250);
 
-useEffect(() => {
-  const timer = setTimeout(() => {
-    fetchUsers();
-  }, 250);
-
-  return () => clearTimeout(timer);
-}, [fetchUsers]);
+    return () => clearTimeout(timer);
+  }, [fetchUsers]);
 
   // Role Promotion / Demotion
   const handleRoleChange = async (userId, newRole) => {
     setActionLoading(true);
+
     try {
-      const res = await fetch(`${API_BASE}/admin/users/${userId}/role`, {
+      const res = await fetch(`/api/admin/users/${userId}/role`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ role: newRole }),
       });
-      if (res.ok) {
-        setUsers((prev) =>
-          prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
-        );
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.message || "Failed to update user role.");
       }
+
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
+      );
     } catch (err) {
       console.error("Failed to update role:", err);
     } finally {
@@ -70,17 +78,30 @@ useEffect(() => {
 
   // User Deletion
   const handleDeleteUser = async (userId, userName) => {
-    if (!confirm(`Are you sure you want to delete user "${userName}"?`)) return;
+    if (
+      !window.confirm(`Are you sure you want to delete user "${userName}"?`)
+    ) {
+      return;
+    }
 
     try {
-      const res = await fetch(`${API_BASE}/admin/users/${userId}`, {
+      setActionLoading(true);
+
+      const res = await fetch(`/api/admin/users/${userId}`, {
         method: "DELETE",
       });
-      if (res.ok) {
-        setUsers((prev) => prev.filter((u) => u.id !== userId));
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.message || "Failed to delete user.");
       }
+
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
     } catch (err) {
       console.error("Failed to delete user:", err);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -96,7 +117,8 @@ useEffect(() => {
             User Management & Role Permissions
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Manage permissions, promote mentors, or grant administrative privileges.
+            Manage permissions, promote mentors, or grant administrative
+            privileges.
           </p>
         </div>
       </div>
@@ -104,7 +126,10 @@ useEffect(() => {
       {/* Search & Filter Bar */}
       <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1">
-          <FiSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={16} />
+          <FiSearch
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
+            size={16}
+          />
           <input
             type="text"
             value={search}
@@ -159,7 +184,10 @@ useEffect(() => {
                 </tr>
               ) : (
                 users.map((u) => (
-                  <tr key={u.id} className="transition-colors hover:bg-gray-50/50">
+                  <tr
+                    key={u.id}
+                    className="transition-colors hover:bg-gray-50/50"
+                  >
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-ink">{u.name}</div>
                       <div className="text-[11px] text-muted">{u.email}</div>
@@ -170,14 +198,16 @@ useEffect(() => {
                           u.role === "admin"
                             ? "bg-purple-50 text-purple-700 border-purple-200"
                             : u.role === "mentor"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-blue-50 text-cobalt border-blue-200"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-blue-50 text-cobalt border-blue-200"
                         }`}
                       >
                         {u.role}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 capitalize text-muted">{u.targetCareer}</td>
+                    <td className="py-3.5 px-4 capitalize text-muted">
+                      {u.targetCareer}
+                    </td>
                     <td className="py-3.5 px-4">
                       <select
                         value={u.role}

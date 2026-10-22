@@ -38,7 +38,10 @@ export default function CourseDetailsPage() {
 
       try {
         console.log("Fetching course for:", identifier);
-        const res = await fetch(`${API_URL}/${identifier}`);
+        const res = await fetch(
+          `${API_URL}/${encodeURIComponent(identifier)}`,
+          { cache: "no-store" },
+        );
 
         if (!res.ok) {
           throw new Error(`Course not found (Status ${res.status})`);

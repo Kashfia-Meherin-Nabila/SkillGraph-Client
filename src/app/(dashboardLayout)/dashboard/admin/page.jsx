@@ -14,31 +14,54 @@ import {
   FiClock,
   FiTrendingUp,
 } from "react-icons/fi";
-import { useSession } from "@/lib/auth-client";
-
-const API_BASE = "http://localhost:5000/api";
 
 export default function AdminOverviewPage() {
-  const { data: session } = useSession();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
+
     async function loadAnalytics() {
       try {
-        const res = await fetch(`${API_BASE}/admin/analytics`);
-        if (res.ok) {
-          const json = await res.json();
-          if (isMounted) setStats(json.data);
+        const res = await fetch("/api/admin/analytics", {
+          cache: "no-store",
+        });
+
+        if (res.status === 401) {
+  console.error(
+    "Admin analytics returned 401. Check session and token forwarding."
+  );
+  return;
+}
+
+if (res.status === 403) {
+  console.error(
+    "Admin analytics returned 403. Check the user's admin role."
+  );
+  return;
+}
+
+        if (!res.ok) {
+          throw new Error("Failed to load admin analytics");
+        }
+
+        const json = await res.json();
+
+        if (isMounted) {
+          setStats(json.data);
         }
       } catch (err) {
         console.error("Failed to load admin analytics:", err);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
+
     loadAnalytics();
+
     return () => {
       isMounted = false;
     };
@@ -50,7 +73,10 @@ export default function AdminOverviewPage() {
         <div className="h-8 w-64 animate-pulse rounded-lg bg-gray-200" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl border border-line bg-white" />
+            <div
+              key={i}
+              className="h-28 animate-pulse rounded-2xl border border-line bg-white"
+            />
           ))}
         </div>
       </div>
@@ -100,7 +126,8 @@ export default function AdminOverviewPage() {
             Platform Health & Operations
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Overview of users, career pathways, mentorship volume, and moderation queue.
+            Overview of users, career pathways, mentorship volume, and
+            moderation queue.
           </p>
         </div>
 
@@ -128,12 +155,16 @@ export default function AdminOverviewPage() {
               className="rounded-2xl border border-line bg-white p-5 shadow-sm"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted">{kpi.label}</span>
+                <span className="text-xs font-semibold text-muted">
+                  {kpi.label}
+                </span>
                 <span className={`rounded-xl p-2.5 ${kpi.color}`}>
                   <Icon size={18} />
                 </span>
               </div>
-              <p className="mt-3 font-display text-2xl font-black text-ink">{kpi.value}</p>
+              <p className="mt-3 font-display text-2xl font-black text-ink">
+                {kpi.value}
+              </p>
               <p className="mt-1 text-xs text-muted">{kpi.sub}</p>
             </motion.div>
           );
@@ -146,8 +177,12 @@ export default function AdminOverviewPage() {
         <div className="rounded-2xl border border-line bg-white p-6 shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between border-b border-line pb-4">
             <div>
-              <h2 className="text-base font-bold text-ink">Recent Registrations</h2>
-              <p className="text-xs text-muted">Latest accounts created across the platform</p>
+              <h2 className="text-base font-bold text-ink">
+                Recent Registrations
+              </h2>
+              <p className="text-xs text-muted">
+                Latest accounts created across the platform
+              </p>
             </div>
             <Link
               href="/dashboard/admin/users"
@@ -180,16 +215,20 @@ export default function AdminOverviewPage() {
                           u.role === "admin"
                             ? "bg-purple-50 text-purple-700 border-purple-200"
                             : u.role === "mentor"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-blue-50 text-cobalt border-blue-200"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-blue-50 text-cobalt border-blue-200"
                         }`}
                       >
                         {u.role}
                       </span>
                     </td>
-                    <td className="py-3 capitalize text-muted">{u.targetCareer}</td>
+                    <td className="py-3 capitalize text-muted">
+                      {u.targetCareer}
+                    </td>
                     <td className="py-3 text-right text-muted">
-                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "Recently"}
+                      {u.createdAt
+                        ? new Date(u.createdAt).toLocaleDateString()
+                        : "Recently"}
                     </td>
                   </tr>
                 ))}
@@ -203,7 +242,9 @@ export default function AdminOverviewPage() {
           {/* Quick Shortcuts */}
           <div className="rounded-2xl border border-line bg-white p-6 shadow-sm">
             <h3 className="text-base font-bold text-ink">Admin Controls</h3>
-            <p className="mt-1 text-xs text-muted">Direct management shortcuts</p>
+            <p className="mt-1 text-xs text-muted">
+              Direct management shortcuts
+            </p>
 
             <div className="mt-4 space-y-2.5">
               <Link
@@ -215,11 +256,18 @@ export default function AdminOverviewPage() {
                     <FiBookOpen size={16} />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-ink">Manage Career Pathways</p>
-                    <p className="text-[11px] text-muted">CRUD for tracks & roadmaps</p>
+                    <p className="text-xs font-semibold text-ink">
+                      Manage Career Pathways
+                    </p>
+                    <p className="text-[11px] text-muted">
+                      CRUD for tracks & roadmaps
+                    </p>
                   </div>
                 </div>
-                <FiArrowRight className="text-muted group-hover:text-cobalt" size={14} />
+                <FiArrowRight
+                  className="text-muted group-hover:text-cobalt"
+                  size={14}
+                />
               </Link>
 
               <Link
@@ -231,11 +279,18 @@ export default function AdminOverviewPage() {
                     <FiLayers size={16} />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-ink">Skill & Module Bank</p>
-                    <p className="text-[11px] text-muted">Approve modules & taxonomy</p>
+                    <p className="text-xs font-semibold text-ink">
+                      Skill & Module Bank
+                    </p>
+                    <p className="text-[11px] text-muted">
+                      Approve modules & taxonomy
+                    </p>
                   </div>
                 </div>
-                <FiArrowRight className="text-muted group-hover:text-purple-600" size={14} />
+                <FiArrowRight
+                  className="text-muted group-hover:text-purple-600"
+                  size={14}
+                />
               </Link>
 
               <Link
@@ -247,11 +302,18 @@ export default function AdminOverviewPage() {
                     <FiCheckCircle size={16} />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-ink">System Config</p>
-                    <p className="text-[11px] text-muted">Audit logs & auth policies</p>
+                    <p className="text-xs font-semibold text-ink">
+                      System Config
+                    </p>
+                    <p className="text-[11px] text-muted">
+                      Audit logs & auth policies
+                    </p>
                   </div>
                 </div>
-                <FiArrowRight className="text-muted group-hover:text-emerald-600" size={14} />
+                <FiArrowRight
+                  className="text-muted group-hover:text-emerald-600"
+                  size={14}
+                />
               </Link>
             </div>
           </div>

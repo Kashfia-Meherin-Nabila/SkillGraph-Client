@@ -15,7 +15,41 @@ import {
   FiCheck,
 } from "react-icons/fi";
 
+// const API_URL = "http://localhost:5000/api/courses";
+
 const API_URL = "http://localhost:5000/api/courses";
+
+const fetchCourses = async () => {
+  try {
+    setLoading(true);
+
+    const res = await fetch(API_URL, {
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.error || data.message || `HTTP error: ${res.status}`
+      );
+    }
+
+    // Ensure courses is always an array
+    const courseList = Array.isArray(data)
+      ? data
+      : Array.isArray(data.courses)
+        ? data.courses
+        : [];
+
+    setCourses(courseList);
+  } catch (error) {
+    console.error("Failed to load courses:", error);
+    setCourses([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState([]);
@@ -35,18 +69,28 @@ export default function CoursesPage() {
   });
 
   // Fetch Courses
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      setCourses(data);
-    } catch (err) {
-      console.error("Failed to load courses:", err);
-    } finally {
-      setLoading(false);
+const fetchCourses = async () => {
+  try {
+    setLoading(true);
+
+    const res = await fetch(API_URL, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch courses");
     }
-  };
+
+    const data = await res.json();
+    setCourses(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error("Failed to load courses:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   // 1. Initial Data Fetch on Mount (no synchronous setState)
   useEffect(() => {
@@ -117,39 +161,82 @@ export default function CoursesPage() {
   };
 
   // Submit Create or Edit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const method = editingCourse ? "PUT" : "POST";
-      const url = editingCourse ? `${API_URL}/${editingCourse._id}` : API_URL;
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+  try {
+    const method = editingCourse ? "PUT" : "POST";
 
-      if (res.ok) {
-        setModalOpen(false);
-        refreshCourses(); // <-- Refresh data without re-triggering the mount effect
-      }
-    } catch (err) {
-      console.error("Error saving course:", err);
+    const url = editingCourse
+      ? `${API_URL}/${editingCourse._id}`
+      : API_URL;
+
+    const payload = {
+      ...formData,
+      modulesCount: Number(formData.modulesCount),
+      skills: Array.isArray(formData.skills)
+        ? formData.skills
+        : formData.skills
+            .split(",")
+            .map((skill) => skill.trim())
+            .filter(Boolean),
+    };
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(
+        data.message ||
+          data.error ||
+          `Request failed with status ${res.status}`
+      );
     }
-  };
+
+    setModalOpen(false);
+    await fetchCourses();
+  } catch (error) {
+    console.error("Error saving course:", error);
+    alert(error.message || "Failed to save career track.");
+  }
+};
 
   // Delete Course
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this career track?")) return;
-    try {
-      const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setCourses((prev) => prev.filter((c) => c._id !== id));
-      }
-    } catch (err) {
-      console.error("Failed to delete course:", err);
+const handleDelete = async (id) => {
+  if (!confirm("Are you sure you want to delete this career track?")) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: "DELETE",
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(
+        data.message ||
+          data.error ||
+          `Delete failed with status ${res.status}`
+      );
     }
-  };
+
+    setCourses((previous) =>
+      previous.filter((course) => course._id !== id)
+    );
+  } catch (error) {
+    console.error("Failed to delete course:", error);
+    alert(error.message || "Failed to delete career track.");
+  }
+};
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -190,7 +277,7 @@ export default function CoursesPage() {
         </div>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-          {courses.map((course, index) => (
+          {(Array.isArray(courses) ? courses : []).map((course, index) => (
             <motion.div
               key={course._id || course.slug}
               initial={{ opacity: 0, y: 16 }}
