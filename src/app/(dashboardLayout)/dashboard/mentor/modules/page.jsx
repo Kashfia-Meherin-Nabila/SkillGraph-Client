@@ -1,3 +1,4 @@
+// In MentorLiveSessionsPage.jsx
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -11,12 +12,16 @@ import {
   FiRefreshCw,
   FiUsers,
   FiExternalLink,
-  FiCheckCircle,
   FiX,
   FiRadio,
 } from "react-icons/fi";
-
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/+$/, "") + "/api";
+// 1. IMPORT FROM YOUR SECURE mentor-api MODULE (Sends JWT)
+import {
+  getMentorSessions,
+  createMentorSession,
+  updateMentorSession,
+  getMentorMentees,
+} from "@/lib/mentor/mentor-api";
 
 function formatDate(value) {
   if (!value) return "Not scheduled";
@@ -39,36 +44,31 @@ export default function MentorLiveSessionsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [filter, setFilter] = useState("all");
 
-  // Form State
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    menteeEmail: "all", // Defaults to "All Mentees"
+    menteeEmail: "all",
     startAt: "",
     endAt: "",
     meetingLink: "",
   });
 
-  // 1. Initial Data Fetch (No synchronous setState inside effect body)
+  // 1. Initial Data Fetch WITH JWT
   useEffect(() => {
     if (!mentorEmail) return;
     let ignore = false;
 
     async function fetchData() {
       try {
-        const [sessionsRes, menteesRes] = await Promise.all([
-          fetch(`${API_BASE}/mentor/sessions?mentorEmail=${encodeURIComponent(mentorEmail)}`, {
-            cache: "no-store",
-          }),
-          fetch(`${API_BASE}/mentor/mentees`, { cache: "no-store" }),
+        // SECURE: Automatically sends Authorization: Bearer <JWT>
+        const [sessionsData, menteesData] = await Promise.all([
+          getMentorSessions({ mentorEmail }),
+          getMentorMentees(),
         ]);
 
-        const sessionsData = await sessionsRes.json();
-        const menteesData = await menteesRes.json();
-
         if (!ignore) {
-          setSessions(sessionsData.sessions || []);
-          if (menteesData.success && Array.isArray(menteesData.data)) {
+          setSessions(sessionsData.sessions || sessionsData.data || []);
+          if (Array.isArray(menteesData.data)) {
             setMentees(menteesData.data);
           }
         }
@@ -78,9 +78,7 @@ export default function MentorLiveSessionsPage() {
           toast.error("Failed to load session data.");
         }
       } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
+        if (!ignore) setLoading(false);
       }
     }
 
@@ -91,27 +89,22 @@ export default function MentorLiveSessionsPage() {
     };
   }, [mentorEmail]);
 
-  // 2. User-triggered reload (Refresh button / after submit)
+  // 2. Reload WITH JWT
   const reloadData = async () => {
     if (!mentorEmail) return;
     setLoading(true);
     try {
-      const res = await fetch(
-        `${API_BASE}/mentor/sessions?mentorEmail=${encodeURIComponent(mentorEmail)}`,
-        { cache: "no-store" }
-      );
-      const data = await res.json();
-      setSessions(data.sessions || []);
+      const data = await getMentorSessions({ mentorEmail });
+      setSessions(data.sessions || data.data || []);
       toast.success("Sessions updated.");
     } catch (err) {
-      console.error(err);
       toast.error("Failed to refresh sessions.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Create Live Conceptual Session
+  // 3. Create Session WITH JWT
   const handleCreateSession = async (e) => {
     e.preventDefault();
     if (!mentorEmail) {
@@ -146,19 +139,10 @@ export default function MentorLiveSessionsPage() {
         meetingLink: formData.meetingLink.trim(),
       };
 
-      const res = await fetch(`${API_BASE}/mentor/sessions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      // SECURE: Uses JWT
+      const result = await createMentorSession(payload);
 
-      const result = await res.json();
-
-      if (!res.ok) {
-        throw new Error(result.message || "Failed to create session.");
-      }
-
-      toast.success("Live conceptual session scheduled! Developers can now see it in their dashboard.");
+      toast.success("Live session scheduled!");
       setShowModal(false);
       setFormData({
         title: "",
@@ -169,8 +153,7 @@ export default function MentorLiveSessionsPage() {
         meetingLink: "",
       });
 
-      // Append new session to list
-      setSessions((prev) => [result.session, ...prev]);
+      setSessions((prev) => [result.session || result.data, ...prev]);
     } catch (err) {
       toast.error(err.message || "Could not schedule session.");
     } finally {
@@ -178,19 +161,15 @@ export default function MentorLiveSessionsPage() {
     }
   };
 
-  // Change status (Complete / Cancel)
+  // 4. Update Status WITH JWT
   const handleUpdateStatus = async (sessionId, status) => {
     try {
-      const res = await fetch(`${API_BASE}/mentor/sessions/${sessionId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mentorEmail, status }),
-      });
-      const result = await res.json();
+      // SECURE: Uses JWT
+      const result = await updateMentorSession(sessionId, { mentorEmail, status });
       if (result.success) {
         toast.success(`Session marked as ${status}.`);
         setSessions((prev) =>
-          prev.map((s) => (s._id === sessionId ? result.session : s))
+          prev.map((s) => (s._id === sessionId ? (result.session || result.data) : s))
         );
       }
     } catch (err) {
@@ -201,6 +180,8 @@ export default function MentorLiveSessionsPage() {
   const visibleSessions = useMemo(() => {
     return sessions.filter((s) => (filter === "all" ? true : s.status === filter));
   }, [sessions, filter]);
+
+  // ... (keep the rest of your JSX template unchanged)
 
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">

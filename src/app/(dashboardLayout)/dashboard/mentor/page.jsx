@@ -13,23 +13,26 @@ import {
   FiVideo,
 } from "react-icons/fi";
 import { useSession } from "@/lib/auth-client";
-
+import { getMentorOverview } from "@/lib/mentor/mentor-api";
 
 const API_ROOT = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 ).replace(/\/+$/, "");
 
-const API_BASE = API_ROOT.endsWith("/api")
-  ? API_ROOT
-  : `${API_ROOT}/api`;
-
+const API_BASE = API_ROOT.endsWith("/api") ? API_ROOT : `${API_ROOT}/api`;
 
 function StatCard({ icon: Icon, label, value, detail, tone = "cobalt" }) {
   const tones = {
     cobalt: { box: "bg-cobalt/10 text-cobalt", value: "text-ink" },
-    emerald: { box: "bg-emerald-50 text-emerald-600", value: "text-emerald-600" },
+    emerald: {
+      box: "bg-emerald-50 text-emerald-600",
+      value: "text-emerald-600",
+    },
     amber: { box: "bg-amber-50 text-amber-600", value: "text-amber-600" },
-    fuchsia: { box: "bg-fuchsia-50 text-fuchsia-600", value: "text-fuchsia-600" },
+    fuchsia: {
+      box: "bg-fuchsia-50 text-fuchsia-600",
+      value: "text-fuchsia-600",
+    },
   };
 
   const t = tones[tone] || tones.cobalt;
@@ -78,39 +81,30 @@ export default function MentorOverviewPage() {
       setError("");
 
       try {
-        const response = await fetch(
-          `${API_BASE}/mentor/overview?email=${encodeURIComponent(userEmail)}`,
-          { cache: "no-store" }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch mentor overview (HTTP ${response.status}).`);
-        }
-
-        const result = await response.json();
+        const result = await getMentorOverview();
 
         if (!isMounted) return;
 
         if (result.success) {
           setOverviewData(result.data);
+        } else {
+          throw new Error(result.message || "Unable to load mentor overview.");
         }
-      
-} catch (err) {
-  console.error("Failed to fetch mentor overview:", err);
+      } catch (err) {
+        console.error("Failed to fetch mentor overview:", err);
 
-  if (isMounted) {
-    setError(
-      err instanceof Error
-        ? err.message
-        : "Unable to load mentor overview."
-    );
-  }
-} finally {
-  if (isMounted) {
-    setLoading(false);
-  }
-}
-
+        if (isMounted) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Unable to load mentor overview.",
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
     }
 
     loadMentorOverview();
@@ -118,7 +112,7 @@ export default function MentorOverviewPage() {
     return () => {
       isMounted = false;
     };
-  }, [isPending, userEmail]);
+  }, [isPending]);
 
   if (isPending || loading) {
     return (
@@ -126,7 +120,10 @@ export default function MentorOverviewPage() {
         <div className="h-8 w-72 bg-gray-200 rounded-lg" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 bg-white rounded-2xl border border-line" />
+            <div
+              key={i}
+              className="h-28 bg-white rounded-2xl border border-line"
+            />
           ))}
         </div>
       </div>
@@ -141,7 +138,8 @@ export default function MentorOverviewPage() {
             Mentor Command Center
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Welcome back, {user?.name || "Mentor"}! Here is your active queue and mentee performance overview.
+            Welcome back, {user?.name || "Mentor"}! Here is your active queue
+            and mentee performance overview.
           </p>
         </div>
 
@@ -194,7 +192,10 @@ export default function MentorOverviewPage() {
 
           {overviewData.pendingReviews.length === 0 ? (
             <div className="py-12 text-center text-xs text-muted">
-              <FiCheckCircle className="mx-auto text-emerald-500 mb-2" size={24} />
+              <FiCheckCircle
+                className="mx-auto text-emerald-500 mb-2"
+                size={24}
+              />
               All caught up! No pending code reviews.
             </div>
           ) : (
@@ -211,7 +212,9 @@ export default function MentorOverviewPage() {
                     <h3 className="font-display text-sm font-bold text-ink">
                       {rev.title}
                     </h3>
-                    <p className="text-xs text-muted">Submitted by {rev.menteeName}</p>
+                    <p className="text-xs text-muted">
+                      Submitted by {rev.menteeName}
+                    </p>
                   </div>
 
                   <Link
@@ -268,7 +271,8 @@ export default function MentorOverviewPage() {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
                       >
-                        <FiVideo size={13} /> Join Call Room <FiExternalLink size={12} />
+                        <FiVideo size={13} /> Join Call Room{" "}
+                        <FiExternalLink size={12} />
                       </a>
                     </div>
                   )}
